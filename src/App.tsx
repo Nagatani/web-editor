@@ -1,99 +1,71 @@
-import React, { useState } from 'react';
-import AceEditor from 'react-ace';
+import React, { useState } from 'react'
+import './App.css'
+import Editor, { Monaco, OnChange, OnMount } from '@monaco-editor/react'
+import type { editor } from 'monaco-editor'
+import { emmetHTML } from 'emmet-monaco-es';
+import Preview from './Preview'
 
-import 'ace-builds/src-noconflict/mode-html';
-import 'ace-builds/src-noconflict/mode-css';
-import 'ace-builds/src-noconflict/mode-javascript';
-import 'ace-builds/src-noconflict/theme-github';
 
-const editorOptions = {
-  theme: 'monokai',
-  fontSize: 14,
-  wrap: true,
-  showPrintMargin: false,
-};
-
-function App() {
-  const [htmlCode, setHtmlCode] = useState('');
-  const [cssCode, setCssCode] = useState('');
-  const [jsCode, setJsCode] = useState('');
-
-  function onChangeHtml(newValue: string) {
-    setHtmlCode(newValue);
+const App: React.FC = () => {
+  const [htmlCode, setHtmlCode] = useState('<h1>Hello, World!</h1>')
+  const [cssCode, setCssCode] = useState('body { background-color: #282c34 }')
+  const [jsCode, setJsCode] = useState('console.log("Hello, World!")')
+  const [monacoInstance, setMonacoInstance] = useState<Monaco | null>(null)
+  const handleEditorDidMount: OnMount = (editor: editor.IStandaloneCodeEditor, monaco: Monaco) => {
+    setMonacoInstance(monaco)
   }
-
-  function onChangeCss(newValue: string) {
-    setCssCode(newValue);
+  const handleEditorWillMountHtml = (monaco: Monaco) => {
+    emmetHTML(monaco, ['html'])
   }
-
-  function onChangeJs(newValue: string) {
-    setJsCode(newValue);
+  const handleEditorWillMountCss = (monaco: Monaco) => {
+    emmetHTML(monaco, ['css'])
   }
-
-  const Preview = () => {
-    const srcDoc = `
-      <html>
-        <head>
-          <style>${cssCode}</style>
-        </head>
-        <body>
-          ${htmlCode}
-          <script>${jsCode}</script>
-        </body>
-      </html>
-    `;
-
-    return (
-      <iframe
-        title="preview"
-        srcDoc={srcDoc}
-        sandbox="allow-scripts"
-        frameBorder="0"
-        width="100%"
-        height="100%"
-      />
-    );
-  };
-
 
   return (
     <div className="App">
-      <div style={{ display: 'flex', height: '100vh' }}>
-        <div style={{ flex: 1 }}>
-          <AceEditor
-            mode="html"
-            theme="github"
-            onChange={onChangeHtml}
-            value={htmlCode}
-            name="html-editor"
-            editorProps={{ $blockScrolling: true }}
-            setOptions={editorOptions}
-          />
-          <AceEditor
-            mode="css"
-            theme="github"
-            onChange={onChangeCss}
-            value={cssCode}
-            name="css-editor"
-            editorProps={{ $blockScrolling: true }}
-            setOptions={editorOptions}
-          />
-          <AceEditor
-            mode="javascript"
-            theme="github"
-            onChange={onChangeJs}
-            value={jsCode}
-            name="js-editor"
-            editorProps={{ $blockScrolling: true }}
-            setOptions={editorOptions}
-          />
-        </div>
-        <div style={{ flex: 1 }}>
-          <Preview />
-        </div>
+      <div className='html-editor-wrapper'>
+        <Editor
+          language={'html'}
+          className={'html-editor'}
+          wrapperProps={{ className: 'html-editor-section' }}
+          theme={'vs-dark'}
+          value={htmlCode}
+          onChange={(value, _event) => setHtmlCode(value || '')}
+          beforeMount={handleEditorWillMountHtml}
+          onMount={handleEditorDidMount}
+        />
       </div>
+      <div className='css-editor-wrapper'>
+        <Editor
+          language='css'
+          className={'css-editor'}
+          wrapperProps={{ className: 'css-editor-section' }}
+          theme={'vs-dark'}
+          value={cssCode}
+          onChange={(value, _event) => setCssCode(value || '')}
+          beforeMount={handleEditorWillMountCss}
+          onMount={handleEditorDidMount}
+        />
+      </div>
+      <div className='js-editor-wrapper'>
+        <Editor
+          language={'javascript'}
+          className={'js-editor'}
+          wrapperProps={{ className: 'js-editor-section' }}
+          theme={'vs-dark'}
+          value={jsCode}
+          onChange={(value, _event) => setJsCode(value || '')}
+          onMount={handleEditorDidMount}
+        />
+      </div>
+
+      <Preview
+        html={htmlCode}
+        css={cssCode}
+        js={jsCode}
+      />
     </div>
-  );
+  )
 }
 
-export default App;
+export default App
